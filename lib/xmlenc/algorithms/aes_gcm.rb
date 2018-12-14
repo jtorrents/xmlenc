@@ -11,10 +11,10 @@ module Xmlenc
         @size = size
       end
 
-      def setup(key = nil, auth_tag = nil)
+      def setup(key = nil, auth_data = nil)
         @cipher   = nil
         @iv       = nil
-        @auth_tag = auth_tag
+        @auth_data = auth_data || ""
         @key      = key || cipher.random_key
         self
       end
@@ -24,22 +24,20 @@ module Xmlenc
         cipher.padding   = 0
         cipher.key       = @key
         cipher.iv        = cipher_value[0...iv_len]
-        cipher.auth_data = ""
-        cipher.auth_tag  = @auth_tag
-        result           = cipher.update(cipher_value[iv_len..-1]) << cipher.final
+        cipher.auth_tag  = cipher_value[-16..-1]
+        cipher.auth_data = @auth_data
+        result           = cipher.update(cipher_value[iv_len...-16]) << cipher.final
         result
-        #padding_size     = result.last.unpack('c').first
-        #result[0...-padding_size]
       end
 
       def encrypt(data, options = {})
         cipher.encrypt
         cipher.key       = @key
         cipher.iv        = iv
-        cipher.auth_data = ""
+        cipher.auth_data = @auth_data
         result           = iv << cipher.update(data) << cipher.final
         tag              = cipher.auth_tag
-        return [result, tag]
+        result << tag
       end
 
       def key
