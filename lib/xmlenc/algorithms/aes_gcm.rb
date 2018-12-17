@@ -23,10 +23,10 @@ module Xmlenc
         cipher.decrypt
         cipher.padding   = 0
         cipher.key       = @key
-        cipher.iv        = cipher_value[0...iv_len]
-        cipher.auth_tag  = cipher_value[-16..-1]
+        cipher.iv        = cipher_value.bytes[0...iv_len].pack("c*")
+        cipher.auth_tag  = cipher_value.bytes[-16..-1].pack("c*")
         cipher.auth_data = @auth_data
-        result           = cipher.update(cipher_value[iv_len...-16]) << cipher.final
+        result           = cipher.update(cipher_value.bytes[iv_len...-16].pack("c*")) << cipher.final
         result
       end
 
